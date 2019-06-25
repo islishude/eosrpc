@@ -1,0 +1,47 @@
+{
+  "name": "eosrpc",
+  "version": "1.0.0",
+  "description": "eosrpc",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "ava"
+  },
+  "bin": {
+    "eosrpc": "dist/bin/cli.js"
+  },
+  "ava": {
+    "compileEnhancements": false,
+    "files": [
+      "test/**/*"
+    ],
+    "extensions": [
+      "ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/islishude/eosrpc.git"
+  },
+  "keywords": [
+    "eos",
+    "rpc",
+    "typescript"
+  ],
+  "author": "islishude",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/islishude/eosrpc/issues"
+  },
+  "homepage": "https://github.com/islishude/eosrpc#readme",
+  "devDependencies": {
+    "@types/node": "^10.12.15",
+    "ava": "^2.1.0",
+    "ts-node": "^7.0.1",
+    "tslint": "^5.11.0",
+    "typescript": "^3.5.2"
+  }
+}
