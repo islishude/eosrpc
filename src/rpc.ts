@@ -1,5 +1,6 @@
-import { IHTTPClient } from "./http";
+import { HttpClient, IHTTPClient } from "./http";
 import {
+  ICurrentStats,
   IEosAbi,
   IEosAccount,
   IEosBlockInfo,
@@ -13,15 +14,15 @@ import {
 export class EOSClient {
   public client: IHTTPClient;
 
-  public constructor(client: IHTTPClient) {
-    this.client = client;
+  public constructor(client?: IHTTPClient) {
+    this.client = client || new HttpClient("http://127.0.0.1:8080");
   }
 
   /**
    * Returns an object containing various details about the blockchain.
    */
   public getInfo() {
-    return this.client.Post<IEosChainInfo>("/v1/chain/get_info");
+    return this.client.call<IEosChainInfo>("/v1/chain/get_info");
   }
 
   /**
@@ -29,7 +30,7 @@ export class EOSClient {
    * @param id Provide a block number or a block id
    */
   public getBlock(id: string | number) {
-    return this.client.Post<IEosBlockInfo>("/v1/chain/get_block", {
+    return this.client.call<IEosBlockInfo>("/v1/chain/get_block", {
       block_num_or_id: id,
     });
   }
@@ -38,18 +39,18 @@ export class EOSClient {
    * Returns an object containing various details about a specific account on the blockchain.
    */
   public getAccountInfo(account: string) {
-    return this.client.Post<IEosAccount>("/v1/chain/get_account", {
+    return this.client.call<IEosAccount>("/v1/chain/get_account", {
       account_name: account,
     });
   }
 
   /**
-   * Post account list under public key provided
+   * Call account list under public key provided
    * ref to `get_key_accounts`
    * @see https://developers.eos.io/eosio-nodeos/reference#get_key_accounts-1
    */
   public getKeyAccount(pubKey: string) {
-    return this.client.Post<{ accounts_name: string[] }>(
+    return this.client.call<{ accounts_name: string[] }>(
       "/v1/history/get_key_accounts",
       {
         public_key: pubKey,
@@ -58,19 +59,18 @@ export class EOSClient {
   }
 
   public getCurrentStats(code: string, symbol: string) {
-    return this.client.Post<{
-      supply: string;
-      max_supply: string;
-      issuer: string;
-    }>("/1/chain/get_currency_stats", { code, symbol });
+    return this.client.call<ICurrentStats>("/v1/chain/get_currency_stats", {
+      code,
+      symbol,
+    });
   }
 
   /**
-   * Post ABI of providing account name
+   * Call ABI of providing account name
    * @param account
    */
   public getABI(account: string) {
-    return this.client.Post<{
+    return this.client.call<{
       account_name: string;
       abi: IEosAbi;
     }>("/v1/chain/get_abi", {
@@ -79,7 +79,7 @@ export class EOSClient {
   }
 
   public getCode(account: string) {
-    return this.client.Post<{
+    return this.client.call<{
       account_name: string;
       code_hash: string;
       wast: string;
@@ -87,11 +87,12 @@ export class EOSClient {
       abi: IEosAbi;
     }>("/v1/chain/get_code", {
       account_name: account,
+      code_as_wasm: 1,
     });
   }
 
   public getRawCodeAndABI(account: string) {
-    return this.client.Post<{
+    return this.client.call<{
       account_name: string;
       wasm: string;
       abi: string;
@@ -125,7 +126,7 @@ export class EOSClient {
     index_position?: number;
     encode_type?: "dec" | "hex";
   }) {
-    return this.client.Post<{ rows: T[]; more: boolean }>(
+    return this.client.call<{ rows: T[]; more: boolean }>(
       "/v1/chain/get_table_rows",
       data,
     );
@@ -141,31 +142,31 @@ export class EOSClient {
     // Limit results returned in response
     limit?: number;
   }) {
-    return this.client.Post<{ rows: T[]; more: boolean }>(
+    return this.client.call<{ rows: T[]; more: boolean }>(
       "/v1/chain/get_table_by_scope",
       data,
     );
   }
 
   /**
-   * Post block header state
+   * Call block header state
    * @param id Provide a block number or a block id
    */
   public getBlockHeaderState(id: string) {
-    return this.client.Post<any>("/v1/chian/get_block_header_state", {
+    return this.client.call<any>("/v1/chain/get_block_header_state", {
       block_num_or_id: id,
     });
   }
 
   /**
-   * Post Balance of your account with token symbol
+   * Call Balance of your account with token symbol
    * @param code token account name
    * @param account your account name
    * @param symbol option token symbol
    * @returns string e.g. `1.0001 EOS`
    */
   public getBalance(code: string, account: string, symbol?: string) {
-    return this.client.Post<string[]>("/v1/chain/get_currency_balance", {
+    return this.client.call<string[]>("/v1/chain/get_currency_balance", {
       account,
       code,
       symbol,
@@ -185,7 +186,7 @@ export class EOSClient {
     packedCtxFreeData: string,
     packedTrx: string,
   ) {
-    return this.client.Post<{
+    return this.client.call<{
       transaction_id: string;
     }>("/v1/chain/push_transaction", {
       compression,
@@ -204,7 +205,7 @@ export class EOSClient {
    * @param args json args
    */
   public abiJSONToBin(code: string, action: string, args: object) {
-    return this.client.Post<{ binargs: string }>("/v1/chain/abi_json_to_bin", {
+    return this.client.call<{ binargs: string }>("/v1/chain/abi_json_to_bin", {
       action,
       args,
       code,
@@ -218,7 +219,7 @@ export class EOSClient {
    * @param binargs binary args
    */
   public abiBinToJSON(code: string, action: string, binargs: string) {
-    return this.client.Post<{ args: any }>("/v1/chain/abi_json_to_bin", {
+    return this.client.call<{ args: any }>("/v1/chain/abi_json_to_bin", {
       action,
       binargs,
       code,
@@ -226,13 +227,13 @@ export class EOSClient {
   }
 
   public getTxInfo(id: number) {
-    return this.client.Post<IEosTrx>("/v1/history/get_transaction", {
+    return this.client.call<IEosTrx>("/v1/history/get_transaction", {
       id,
     });
   }
 
   public getControlledAccounts(account: string) {
-    return this.client.Post<{ controlled_accounts: string[] }>(
+    return this.client.call<{ controlled_accounts: string[] }>(
       "v1/history/get_controlled_accounts",
       {
         controlling_account: account,
@@ -257,9 +258,9 @@ export class EOSClient {
   }
 
   /**
-   * Post NET And CPU price
+   * Call NET And CPU price
    *
-   * Post these value should compute from a referer account,
+   * Call these value should compute from a referer account,
    * so best suggestion is that gives a EOS exchange platform account
    */
   public async getNetAndCpuPrice(refAccount: string = "heztanrqgene") {
@@ -289,12 +290,12 @@ export class EOSClient {
   }
 
   /**
-   * Post producer list,available 1.4 or above,call `getProducerTable` if you run in lower version
+   * Call producer list,available 1.4 or above,call `getProducerTable` if you run in lower version
    * @param limit count you wanna
    * @param lowBound a-z 1-5
    */
   public async getProducerList(limit: number, lowBound: string) {
-    return this.client.Post<IEosProds>("/v1/chain/get_producers", {
+    return this.client.call<IEosProds>("/v1/chain/get_producers", {
       json: true,
       limit,
       lower_bound: lowBound,
@@ -302,7 +303,7 @@ export class EOSClient {
   }
 
   /**
-   * Post producer list,available 1.0 version or above
+   * Call producer list,available 1.0 version or above
    * @param limit count you wanna
    * @param lowBound a-z 1-5
    * @param upperBound a-z 1-5

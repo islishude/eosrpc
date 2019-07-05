@@ -1,3 +1,3 @@
-const packageInfo = require("../../package.json");
+const packageInfo = require("../package.json");
 
 export const version = packageInfo.version;

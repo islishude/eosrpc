@@ -18,17 +18,16 @@ eosrpc repl by isLishude <${color._}https://github.com/islishude/eosrpc${
 The available global variables are
 
 ${color.yellow}
-- HttpClient(default http client)
+- HttpClient(default jsonrpc client)
 - EOSClient
 ${color.clear}
 
-See the README to learn more API.
+Run \`npx -n --experimental-repl-await eosrpc\` to enable top-level-await.
 
 e.g.
 ${color.yellow}
-  let client = new HttpClient({ url: 'http://peer1.eoshuobipool.com:8181' })
-  let eos = new EOSClient(client);
-  await eth.getBlockCount(client);
+  const HttpProvider = new HttpClient({ url: "http://127.0.0.1:8545" });
+  const EthClient = new EOSClient(HttpProvider);
 ${color.clear}
 `);
 

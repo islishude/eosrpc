@@ -21,6 +21,14 @@ export interface IEosAuthority {
   }>;
 }
 
+export interface ICurrentStats {
+  [key: string]: {
+    supply: string;
+    max_supply: string;
+    issuer: string;
+  };
+}
+
 export interface IEosTrx {
   // executed  = 0 ///< succeed, no error handler executed
   // soft_fail = 1 ///< objectively failed (not executed), error handler executed

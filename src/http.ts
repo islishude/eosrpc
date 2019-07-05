@@ -1,5 +1,6 @@
 import http = require("http");
 import https = require("https");
+import urllib = require("url");
 import { version as PkgVer } from "./version";
 
 export interface IMessage<T> {
@@ -8,63 +9,86 @@ export interface IMessage<T> {
   body: T;
 }
 export interface IHTTPClient {
-  Post<T>(url: string, body?: object): Promise<IMessage<T>>;
+  call<T>(url: string, body?: object): Promise<IMessage<T>>;
+  setUrl(url: string): void;
 }
 
 export class HttpClient implements IHTTPClient {
   public url: string;
-  private httpAgent: http.Agent | https.Agent;
-  private httpModule: typeof http | typeof https;
-
-  private headers = {
+  public timeout: number;
+  public headers = {
     "Accept": "application/json",
     "Accept-Encoding": "identity",
     "Agent": `eosrpc/${PkgVer}`,
     "Content-Type": "application/json",
   };
+  public httpModule: typeof http | typeof https;
+  public httpAgent: http.Agent | https.Agent;
 
   public constructor(
     url: string,
     keepAlive: boolean = false,
     timeout: number = 10 * 1000,
   ) {
-    this.httpModule = /^https:.+$/g.test(url) ? https : http;
-    this.httpAgent = new this.httpModule.Agent({ keepAlive, timeout });
-    this.url = url;
+    const path = new urllib.URL(url);
+    this.httpModule = path.protocol === "https:" ? https : http;
+    this.httpAgent = new this.httpModule.Agent({ keepAlive });
+    this.url = path.toString();
+    this.timeout = timeout;
   }
 
-  public Post<T>(url: string, data: object = {}): Promise<IMessage<T>> {
+  public setUrl(url: string) {
+    const path = new urllib.URL(url);
+    // @ts-ignore
+    if (path.protocol !== this.httpAgent.protocol) {
+      this.httpModule = path.protocol === "https:" ? https : http;
+      this.httpAgent = new this.httpModule.Agent({
+        // @ts-ignore
+        keepAlive: this.httpAgent.keepAlive,
+      });
+    }
+    this.url = path.toString();
+  }
+
+  public call<T>(path: string, data: any = ""): Promise<IMessage<T>> {
     return new Promise<IMessage<T>>((resolve, reject) => {
+      const reqPath = urllib.resolve(this.url, path);
       const client = this.httpModule.request(
-        this.url + url,
+        reqPath,
         {
+          method: "POST",
           agent: this.httpAgent,
           headers: this.headers,
+          timeout: this.timeout,
         },
-        (res) => {
-          res.on("error", reject);
+        async (res) => {
+          try {
+            const body: Buffer[] = [];
+            for await (const chunk of res) {
+              body.push(chunk);
+            }
 
-          const chunk: Buffer[] = [];
-          res.on("data", (tmp) => {
-            chunk.push(tmp);
-          });
-
-          res.on("end", () => {
-            const returns: IMessage<T> = {
-              body: JSON.parse(Buffer.concat(chunk).toString()),
+            const respData: IMessage<T> = {
+              body: JSON.parse(Buffer.concat(body).toString()),
               headers: res.headers,
               statusCode: res.statusCode as number,
             };
-            resolve(returns);
-          });
+            resolve(respData);
+          } catch (e) {
+            reject(e);
+          }
         },
       );
 
-      const reqBuffer = Buffer.from(JSON.stringify(data));
+      const reqBuffer =
+        typeof data === "string"
+          ? Buffer.from(data)
+          : Buffer.from(JSON.stringify(data));
       client.setHeader("Content-Length", Buffer.byteLength(reqBuffer));
-      client.write(data);
+      client.write(reqBuffer);
 
       client.on("timeout", () => reject(new Error("timeout")));
+      client.on("error", reject);
     });
   }
 }
