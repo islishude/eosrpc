@@ -7,4 +7,5 @@ install:
   - "npm ci"
 cache: npm
 script:
+  - "npm run build"
   - "npm test"
