@@ -1,7 +1,7 @@
 {
-  "name": "eosrpc",
+  "name": "@islishude/eosrpc",
   "version": "1.0.0",
-  "description": "eosrpc",
+  "description": "type-safe eosrpc client",
   "main": "dist/index.js",
   "files": [
     "dist"

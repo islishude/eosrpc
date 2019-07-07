@@ -11,6 +11,7 @@ export interface IMessage<T> {
 export interface IHTTPClient {
   call<T>(url: string, body?: object): Promise<IMessage<T>>;
   setUrl(url: string): void;
+  close(): void;
 }
 
 export class HttpClient implements IHTTPClient {
@@ -90,5 +91,9 @@ export class HttpClient implements IHTTPClient {
       client.on("timeout", () => reject(new Error("timeout")));
       client.on("error", reject);
     });
+  }
+
+  public close() {
+    this.httpAgent.destroy();
   }
 }

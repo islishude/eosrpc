@@ -1,0 +1,16 @@
+{
+  "name": "examples",
+  "version": "1.0.0",
+  "description": "eosrpc usage examples",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "private": true,
+  "keywords": [],
+  "author": "islishude",
+  "license": "ISC",
+  "dependencies": {
+    "@islishude/eosrpc": "file:.."
+  }
+}

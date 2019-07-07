@@ -22,12 +22,12 @@ ${color.yellow}
 - EOSClient
 ${color.clear}
 
-Run \`npx -n --experimental-repl-await eosrpc\` to enable top-level-await.
+Run \`npx -n --experimental-repl-await islishude/eosrpc\` to enable top-level-await.
 
 e.g.
 ${color.yellow}
-  const HttpProvider = new HttpClient({ url: "http://127.0.0.1:8545" });
-  const EthClient = new EOSClient(HttpProvider);
+  const eosrpc = new EOSClient();
+  await eosrpc.getInfo();
 ${color.clear}
 `);
 
