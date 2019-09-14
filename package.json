@@ -1,8 +1,11 @@
 {
-  "name": "@islishude/eosrpc",
+  "name": "eosrpc",
   "version": "1.0.0",
   "description": "type-safe eosrpc client",
   "main": "dist/index.js",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@islishude"
+  },
   "files": [
     "dist"
   ],
